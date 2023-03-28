@@ -1,4 +1,4 @@
-name: compiler-ipk
+name: compiler-kernel
 
 on:
   workflow_dispatch:
@@ -15,12 +15,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      
+      - name: Initialization environment
+        run: |
+          sudo apt install gcc-aarch64-linux-gnu -y
 
       - name: Download source code
         run: |
           wget ${REPO_URL}
           tar -xzvf *.tar.gz
-          ls -a
+          mv -f linux-* kernel
+          
+      - name: Load custom configuration
+        run: |
+          cd kernel/
+          wget -O .config ${CONFIG_URL}
+          
+      - name: Compile the kernel
+        run: |
+          cd kernel/
+          make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
           
       - name: Upload OpenWrt Firmware to Release
         uses: ncipollo/release-action@main
