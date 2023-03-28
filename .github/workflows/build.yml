@@ -1,0 +1,32 @@
+name: compiler-ipk
+
+on:
+  workflow_dispatch:
+
+env:
+  REPO_URL: https://github.com/xanmod/linux/archive/refs/tags/6.1.1-xanmod1.tar.gz
+  CONFIG_URL: https://raw.githubusercontent.com/unifreq/arm64-kernel-configs/main/config-6.1.1-flippy-80+
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download source code
+        run: |
+          wget ${REPO_URL}
+          tar -xzvf *.tar.gz
+          ls -a
+          
+      - name: Upload OpenWrt Firmware to Release
+        uses: ncipollo/release-action@main
+        if: ${{ env.PACKAGED_STATUS }} == 'success' && !cancelled()
+        with:
+          tag: Openwrt-Armvirt
+          artifacts: "openwrt/bin/targets/armvirt/64/*"
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
